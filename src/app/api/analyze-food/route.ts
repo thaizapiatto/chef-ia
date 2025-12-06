@@ -25,18 +25,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate API key BEFORE creating OpenAI instance
-    if (!process.env.OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY não configurada");
+    // Validate API key exists
+    const apiKey = process.env.OPENAI_API_KEY;
+    
+    if (!apiKey) {
+      console.error("❌ OPENAI_API_KEY não está configurada no ambiente");
       return NextResponse.json(
-        { error: "Chave da API OpenAI não configurada. Configure a variável OPENAI_API_KEY." },
+        { 
+          error: "Chave da API OpenAI não configurada.",
+          details: "Configure a variável OPENAI_API_KEY nas configurações do projeto."
+        },
         { status: 500 }
       );
     }
 
-    // Create OpenAI instance only after validation
+    // Validate API key format (should start with sk-)
+    if (!apiKey.startsWith('sk-')) {
+      console.error("❌ OPENAI_API_KEY tem formato inválido (deve começar com 'sk-')");
+      return NextResponse.json(
+        { 
+          error: "Chave da API OpenAI com formato inválido.",
+          details: "A chave deve começar com 'sk-'. Verifique se copiou corretamente."
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log("✅ OPENAI_API_KEY configurada e com formato válido");
+
+    // Create OpenAI instance
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: apiKey,
     });
 
     // Analyze images with GPT-4 Vision
@@ -205,25 +224,50 @@ export async function POST(request: NextRequest) {
       recipes: validRecipes,
     });
   } catch (error: any) {
-    console.error("Erro ao processar imagens:", error);
+    console.error("❌ Erro ao processar imagens:", error);
+    console.error("Detalhes do erro:", {
+      message: error?.message,
+      status: error?.status,
+      code: error?.code,
+      type: error?.type
+    });
     
     // Handle specific OpenAI errors
     if (error?.status === 401 || error?.code === 'invalid_api_key') {
       return NextResponse.json(
-        { error: "Chave da API OpenAI inválida. Verifique se a variável OPENAI_API_KEY está configurada corretamente." },
-        { status: 500 }
+        { 
+          error: "Chave da API OpenAI inválida ou expirada.",
+          details: "Sua chave OPENAI_API_KEY não está funcionando. Possíveis causas: 1) Chave expirada, 2) Chave incorreta, 3) Sem créditos na conta OpenAI. Gere uma nova chave em https://platform.openai.com/api-keys"
+        },
+        { status: 401 }
       );
     }
     
     if (error?.status === 429) {
       return NextResponse.json(
-        { error: "Limite de requisições atingido. Aguarde alguns instantes e tente novamente." },
+        { 
+          error: "Limite de requisições atingido.",
+          details: "Você atingiu o limite de uso da API OpenAI. Aguarde alguns instantes ou verifique seu plano em https://platform.openai.com/usage"
+        },
         { status: 429 }
       );
     }
 
+    if (error?.status === 403) {
+      return NextResponse.json(
+        { 
+          error: "Acesso negado pela OpenAI.",
+          details: "Sua conta OpenAI pode estar com problemas de pagamento ou restrições. Verifique em https://platform.openai.com/account/billing"
+        },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Erro ao processar as imagens. Tente novamente." },
+      { 
+        error: "Erro ao processar as imagens.",
+        details: error?.message || "Erro desconhecido. Tente novamente."
+      },
       { status: 500 }
     );
   }
