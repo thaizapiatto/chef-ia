@@ -246,8 +246,8 @@ export async function POST(request: NextRequest) {
     if (error?.status === 429) {
       return NextResponse.json(
         { 
-          error: "Limite de requisições atingido.",
-          details: "Você atingiu o limite de uso da API OpenAI. Aguarde alguns instantes ou verifique seu plano em https://platform.openai.com/usage"
+          error: "Limite de requisições atingido",
+          details: "Você atingiu o limite de uso da API OpenAI. Isso pode acontecer por:\n\n1. Limite de requisições por minuto excedido (aguarde 1 minuto)\n2. Cota mensal esgotada (verifique seu plano)\n3. Saldo de créditos insuficiente\n\nSoluções:\n• Aguarde alguns instantes e tente novamente\n• Verifique seu uso em: https://platform.openai.com/usage\n• Adicione créditos em: https://platform.openai.com/account/billing"
         },
         { status: 429 }
       );

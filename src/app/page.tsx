@@ -102,14 +102,20 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Erro ao processar imagens");
+        // Show detailed error message from API
+        const errorMessage = data.details 
+          ? `${data.error}\n\n${data.details}`
+          : data.error || "Erro ao processar imagens";
+        throw new Error(errorMessage);
       }
 
       setDetectedIngredients(data.ingredients);
       setRecipes(data.recipes);
     } catch (error: any) {
       console.error("Erro ao analisar ingredientes:", error);
-      setError(error.message || "Erro ao analisar ingredientes. Tente novamente.");
+      // Display detailed error message with line breaks
+      const errorMessage = error.message || "Erro ao analisar ingredientes. Tente novamente.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -209,7 +215,7 @@ export default function Home() {
         {error && (
           <Alert variant="destructive" className="mb-6 bg-red-50 border-red-200">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription className="whitespace-pre-line">{error}</AlertDescription>
           </Alert>
         )}
 
