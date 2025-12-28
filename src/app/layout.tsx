@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chef IA - Receitas Inteligentes",
-  description: "Descubra receitas incríveis com os ingredientes que você tem em casa",
+  title: "FitChef - Receitas Saudáveis com IA",
+  description: "Transforme seus ingredientes em receitas saudáveis, equilibradas e deliciosas com inteligência artificial",
 };
 
 export default function RootLayout({
